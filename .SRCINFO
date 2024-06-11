@@ -1,7 +1,7 @@
 pkgbase = python-cupy-rocm
 	pkgdesc = NumPy-like API accelerated with ROCm
 	pkgver = 13.1.0
-	pkgrel = 1
+	pkgrel = 2
 	url = https://cupy.dev
 	arch = x86_64
 	license = MIT
@@ -20,6 +20,6 @@ pkgbase = python-cupy-rocm
 	md5sums = 17c7f9635569aac243be498275ba71ba
 	md5sums = 4fbb2aeba1e0ef8d7e094deb811630df
 	md5sums = 0fb2589c81179e752d9bc45be72ed992
-	md5sums = 64146f209dae63cc67bf9c36d1b0935b
+	md5sums = 05a3091829564c3e09015aef861b83bd
 
 pkgname = python-cupy-rocm
