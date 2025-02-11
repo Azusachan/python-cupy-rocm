@@ -2,7 +2,7 @@
 
 pkgname=python-cupy-rocm
 _pkgname=cupy
-pkgver=13.2.0
+pkgver=13.3.0
 _cccl_commit=3ef9dd9642da2d4e0b3ff77e445e73d7aabd4687
 _dlpack_commit=365b823cedb281cd0240ca601aba9b78771f91a3
 _jitify_commit=1a0ca0e837405506f3b8f7883bacb71c20d86d96
@@ -17,12 +17,12 @@ source=("https://github.com/cupy/cupy/archive/v$pkgver.tar.gz"
         "https://github.com/NVIDIA/cccl/archive/$_cccl_commit.tar.gz"
         "https://github.com/dmlc/dlpack/archive/$_dlpack_commit.tar.gz"
         "https://github.com/NVIDIA/jitify/archive/$_jitify_commit.tar.gz"
-        "rocm-6.0.patch")
-md5sums=('8e178493f30ed3ee427ac75c2af8ce58'
+        "https://github.com/cupy/cupy/pull/8608.patch")
+md5sums=('9360aa672722d7a76d9e091b69f301a3'
          '17c7f9635569aac243be498275ba71ba'
          '4fbb2aeba1e0ef8d7e094deb811630df'
          '0fb2589c81179e752d9bc45be72ed992'
-         '05a3091829564c3e09015aef861b83bd')
+         'a3b3ecd948210244477ef408821de194')
 
 prepare() {
   cd "$srcdir/$_pkgname-$pkgver"
@@ -30,7 +30,7 @@ prepare() {
   ln -srfT "$srcdir/cccl-$_cccl_commit" third_party/cccl
   ln -srfT "$srcdir/dlpack-$_dlpack_commit" third_party/dlpack
   ln -srfT "$srcdir/jitify-$_jitify_commit" third_party/jitify
-   patch --forward --strip=1 --input=${srcdir}/rocm-6.0.patch
+  patch --forward --strip=1 --input=${srcdir}/8608.patch
 }
 
 build() {
