@@ -1,0 +1,449 @@
+Subject: [PATCH] Allow Cython-3 and resolve compilation errors
+
+cupy/_core/_kernel.pyx:1159:24: '__module__' redeclared
+Fixed by removing "readonly object __module__"
+
+cupy/_core/dlpack.pyx:152:25: Cannot assign type 'void (DLManagedTensor *) except * nogil' to 'void (*)(DLManagedTensor *) noexcept'. Exception values are incompatible. Suggest adding 'noexcept' to the type of 'deleter'.
+cupy/_core/dlpack.pyx:154:57: Cannot assign type 'void (object) except *' to 'PyCapsule_Destructor' (alias of 'void (*)(object) noexcept'). Exception values are incompatible. Suggest adding 'noexcept' to the type of 'pycapsule_deleter'.
+Fixed by adding noexcept to those functions
+
+Closes: https://github.com/cupy/cupy/issues/4610
+Signed-off-by: Yiyang Wu <xgreenlandforwyy@gmail.com>
+---
+diff --git a/cupy_backends/cuda/api/_driver_extern.pxi b/cupy_backends/cuda/api/_driver_extern.pxi
+--- a/cupy_backends/cuda/api/_driver_extern.pxi	(revision 1e4a78b77d66840d8e2e15e0d73e98573bf5be22)
++++ b/cupy_backends/cuda/api/_driver_extern.pxi	(date 1739281295093)
+@@ -4,68 +4,68 @@
+ 
+ 
+ # Error handling
+-ctypedef int (*F_cuGetErrorName)(Result error, const char** pStr) nogil
++ctypedef int (*F_cuGetErrorName)(Result error, const char** pStr) noexcept nogil  # NOQA
+ cdef F_cuGetErrorName cuGetErrorName
+-ctypedef int (*F_cuGetErrorString)(Result error, const char** pStr) nogil
++ctypedef int (*F_cuGetErrorString)(Result error, const char** pStr) noexcept nogil  # NOQA
+ cdef F_cuGetErrorString cuGetErrorString
+ 
+ # Primary context management
+-ctypedef int (*F_cuDevicePrimaryCtxRelease)(Device dev) nogil
++ctypedef int (*F_cuDevicePrimaryCtxRelease)(Device dev) noexcept nogil
+ cdef F_cuDevicePrimaryCtxRelease cuDevicePrimaryCtxRelease
+ 
+ # Context management
+-ctypedef int (*F_cuCtxGetCurrent)(Context* pctx) nogil
++ctypedef int (*F_cuCtxGetCurrent)(Context* pctx) noexcept nogil
+ cdef F_cuCtxGetCurrent cuCtxGetCurrent
+-ctypedef int (*F_cuCtxSetCurrent)(Context ctx) nogil
++ctypedef int (*F_cuCtxSetCurrent)(Context ctx) noexcept nogil
+ cdef F_cuCtxSetCurrent cuCtxSetCurrent
+-ctypedef int (*F_cuCtxCreate)(Context* pctx, unsigned int flags, Device dev) nogil  # NOQA
++ctypedef int (*F_cuCtxCreate)(Context* pctx, unsigned int flags, Device dev) noexcept nogil  # NOQA
+ cdef F_cuCtxCreate cuCtxCreate
+-ctypedef int (*F_cuCtxDestroy)(Context ctx) nogil
++ctypedef int (*F_cuCtxDestroy)(Context ctx) noexcept nogil
+ cdef F_cuCtxDestroy cuCtxDestroy
+-ctypedef int (*F_cuCtxGetDevice)(Device*) nogil
++ctypedef int (*F_cuCtxGetDevice)(Device*) noexcept nogil
+ cdef F_cuCtxGetDevice cuCtxGetDevice
+ 
+ # Module load and kernel execution
+-ctypedef int (*F_cuLinkCreate)(unsigned int numOptions, CUjit_option* options, void** optionValues, LinkState* stateOut) nogil  # NOQA
++ctypedef int (*F_cuLinkCreate)(unsigned int numOptions, CUjit_option* options, void** optionValues, LinkState* stateOut) noexcept nogil  # NOQA
+ cdef F_cuLinkCreate cuLinkCreate
+-ctypedef int (*F_cuLinkAddData)(LinkState state, CUjitInputType type, void* data, size_t size, const char* name, unsigned int  numOptions, CUjit_option* options, void** optionValues) nogil  # NOQA
++ctypedef int (*F_cuLinkAddData)(LinkState state, CUjitInputType type, void* data, size_t size, const char* name, unsigned int  numOptions, CUjit_option* options, void** optionValues) noexcept nogil  # NOQA
+ cdef F_cuLinkAddData cuLinkAddData
+-ctypedef int (*F_cuLinkAddFile)(LinkState state, CUjitInputType type, const char* path, unsigned int numOptions, CUjit_option* options, void** optionValues) nogil  # NOQA
++ctypedef int (*F_cuLinkAddFile)(LinkState state, CUjitInputType type, const char* path, unsigned int numOptions, CUjit_option* options, void** optionValues) noexcept nogil  # NOQA
+ cdef F_cuLinkAddFile cuLinkAddFile
+-ctypedef int (*F_cuLinkComplete)(LinkState state, void** cubinOut, size_t* sizeOut) nogil  # NOQA
++ctypedef int (*F_cuLinkComplete)(LinkState state, void** cubinOut, size_t* sizeOut) noexcept nogil  # NOQA
+ cdef F_cuLinkComplete cuLinkComplete
+-ctypedef int (*F_cuLinkDestroy)(LinkState state) nogil
++ctypedef int (*F_cuLinkDestroy)(LinkState state) noexcept nogil
+ cdef F_cuLinkDestroy cuLinkDestroy
+-ctypedef int (*F_cuModuleLoad)(Module* module, char* fname) nogil
++ctypedef int (*F_cuModuleLoad)(Module* module, char* fname) noexcept nogil
+ cdef F_cuModuleLoad cuModuleLoad
+-ctypedef int (*F_cuModuleLoadData)(Module* module, void* image) nogil
++ctypedef int (*F_cuModuleLoadData)(Module* module, void* image) noexcept nogil
+ cdef F_cuModuleLoadData cuModuleLoadData
+-ctypedef int (*F_cuModuleUnload)(Module hmod) nogil
++ctypedef int (*F_cuModuleUnload)(Module hmod) noexcept nogil
+ cdef F_cuModuleUnload cuModuleUnload
+-ctypedef int (*F_cuModuleGetFunction)(Function* hfunc, Module hmod, char* name) nogil  # NOQA
++ctypedef int (*F_cuModuleGetFunction)(Function* hfunc, Module hmod, char* name) noexcept nogil  # NOQA
+ cdef F_cuModuleGetFunction cuModuleGetFunction
+-ctypedef int (*F_cuModuleGetGlobal)(Deviceptr* dptr, size_t* bytes, Module hmod, char* name) nogil  # NOQA
++ctypedef int (*F_cuModuleGetGlobal)(Deviceptr* dptr, size_t* bytes, Module hmod, char* name) noexcept nogil  # NOQA
+ cdef F_cuModuleGetGlobal cuModuleGetGlobal
+-ctypedef int (*F_cuLaunchKernel)(Function f, unsigned int gridDimX, unsigned int gridDimY, unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY, unsigned int blockDimZ, unsigned int sharedMemBytes, Stream hStream, void** kernelParams, void** extra) nogil  # NOQA
++ctypedef int (*F_cuLaunchKernel)(Function f, unsigned int gridDimX, unsigned int gridDimY, unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY, unsigned int blockDimZ, unsigned int sharedMemBytes, Stream hStream, void** kernelParams, void** extra) noexcept nogil  # NOQA
+ cdef F_cuLaunchKernel cuLaunchKernel
+-ctypedef int (*F_cuLaunchCooperativeKernel)(Function f, unsigned int gridDimX, unsigned int gridDimY, unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY, unsigned int blockDimZ, unsigned int sharedMemBytes, Stream hStream, void** kernelParams) nogil  # NOQA
++ctypedef int (*F_cuLaunchCooperativeKernel)(Function f, unsigned int gridDimX, unsigned int gridDimY, unsigned int gridDimZ, unsigned int blockDimX, unsigned int blockDimY, unsigned int blockDimZ, unsigned int sharedMemBytes, Stream hStream, void** kernelParams) noexcept nogil  # NOQA
+ cdef F_cuLaunchCooperativeKernel cuLaunchCooperativeKernel
+ 
+ # Kernel attributes
+-ctypedef int (*F_cuFuncGetAttribute)(int *pi, CUfunction_attribute attrib, Function hfunc) nogil  # NOQA
++ctypedef int (*F_cuFuncGetAttribute)(int *pi, CUfunction_attribute attrib, Function hfunc) noexcept nogil  # NOQA
+ cdef F_cuFuncGetAttribute cuFuncGetAttribute
+ 
+-ctypedef int (*F_cuFuncSetAttribute)(Function hfunc, CUfunction_attribute attrib, int value) nogil  # NOQA
++ctypedef int (*F_cuFuncSetAttribute)(Function hfunc, CUfunction_attribute attrib, int value) noexcept nogil  # NOQA
+ cdef F_cuFuncSetAttribute cuFuncSetAttribute
+ 
+ # Occupancy
+-ctypedef int (*F_cuOccupancyMaxActiveBlocksPerMultiprocessor)(int* numBlocks, Function func, int blockSize, size_t dynamicSMemSize) nogil  # NOQA
++ctypedef int (*F_cuOccupancyMaxActiveBlocksPerMultiprocessor)(int* numBlocks, Function func, int blockSize, size_t dynamicSMemSize) noexcept nogil  # NOQA
+ cdef F_cuOccupancyMaxActiveBlocksPerMultiprocessor cuOccupancyMaxActiveBlocksPerMultiprocessor  # NOQA
+-ctypedef int (*F_cuOccupancyMaxPotentialBlockSize)(int* minGridSize, int* blockSize, Function func, CUoccupancyB2DSize block2shmem, size_t dynamicSMemSize, int blockSizeLimit) nogil  # NOQA
++ctypedef int (*F_cuOccupancyMaxPotentialBlockSize)(int* minGridSize, int* blockSize, Function func, CUoccupancyB2DSize block2shmem, size_t dynamicSMemSize, int blockSizeLimit) noexcept nogil  # NOQA
+ cdef F_cuOccupancyMaxPotentialBlockSize cuOccupancyMaxPotentialBlockSize
+ 
+ # Stream
+-ctypedef int (*F_cuStreamGetCtx)(Stream hStream, Context* pctx) nogil
++ctypedef int (*F_cuStreamGetCtx)(Stream hStream, Context* pctx) noexcept nogil
+ cdef F_cuStreamGetCtx cuStreamGetCtx
+ 
+ 
+Index: cupy_backends/cuda/libs/_cnvrtc.pxi
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/cupy_backends/cuda/libs/_cnvrtc.pxi b/cupy_backends/cuda/libs/_cnvrtc.pxi
+--- a/cupy_backends/cuda/libs/_cnvrtc.pxi	(revision 1e4a78b77d66840d8e2e15e0d73e98573bf5be22)
++++ b/cupy_backends/cuda/libs/_cnvrtc.pxi	(date 1739281295121)
+@@ -9,58 +9,58 @@
+ # TODO(kmaehashi): Remove this alias.
+ ctypedef nvrtcProgram Program
+ 
+-ctypedef const char* (*F_nvrtcGetErrorString)(nvrtcResult result) nogil
++ctypedef const char* (*F_nvrtcGetErrorString)(nvrtcResult result) noexcept nogil  # NOQA
+ cdef F_nvrtcGetErrorString nvrtcGetErrorString
+ 
+-ctypedef nvrtcResult (*F_nvrtcVersion)(int *major, int *minor) nogil
++ctypedef nvrtcResult (*F_nvrtcVersion)(int *major, int *minor) noexcept nogil
+ cdef F_nvrtcVersion nvrtcVersion
+ 
+ ctypedef nvrtcResult (*F_nvrtcCreateProgram)(
+     nvrtcProgram* prog, const char* src, const char* name, int numHeaders,
+-    const char** headers, const char** includeNames) nogil
++    const char** headers, const char** includeNames) noexcept nogil
+ cdef F_nvrtcCreateProgram nvrtcCreateProgram
+ 
+-ctypedef nvrtcResult (*F_nvrtcDestroyProgram)(nvrtcProgram *prog) nogil
++ctypedef nvrtcResult (*F_nvrtcDestroyProgram)(nvrtcProgram *prog) noexcept nogil  # NOQA
+ cdef F_nvrtcDestroyProgram nvrtcDestroyProgram
+ 
+ ctypedef nvrtcResult (*F_nvrtcCompileProgram)(
+-    nvrtcProgram prog, int numOptions, const char** options) nogil
++    nvrtcProgram prog, int numOptions, const char** options) noexcept nogil
+ cdef F_nvrtcCompileProgram nvrtcCompileProgram
+ 
+-ctypedef nvrtcResult (*F_nvrtcGetPTXSize)(nvrtcProgram prog, size_t *ptxSizeRet) nogil  # NOQA
++ctypedef nvrtcResult (*F_nvrtcGetPTXSize)(nvrtcProgram prog, size_t *ptxSizeRet) noexcept nogil  # NOQA
+ cdef F_nvrtcGetPTXSize nvrtcGetPTXSize
+ 
+-ctypedef nvrtcResult (*F_nvrtcGetPTX)(nvrtcProgram prog, char *ptx) nogil
++ctypedef nvrtcResult (*F_nvrtcGetPTX)(nvrtcProgram prog, char *ptx) noexcept nogil  # NOQA
+ cdef F_nvrtcGetPTX nvrtcGetPTX
+ 
+-ctypedef nvrtcResult (*F_nvrtcGetCUBINSize)(nvrtcProgram prog, size_t *cubinSizeRet) nogil  # NOQA
++ctypedef nvrtcResult (*F_nvrtcGetCUBINSize)(nvrtcProgram prog, size_t *cubinSizeRet) noexcept nogil  # NOQA
+ cdef F_nvrtcGetCUBINSize nvrtcGetCUBINSize
+ 
+-ctypedef nvrtcResult (*F_nvrtcGetCUBIN)(nvrtcProgram prog, char *cubin) nogil
++ctypedef nvrtcResult (*F_nvrtcGetCUBIN)(nvrtcProgram prog, char *cubin) noexcept nogil  # NOQA
+ cdef F_nvrtcGetCUBIN nvrtcGetCUBIN
+ 
+-ctypedef nvrtcResult (*F_nvrtcGetProgramLogSize)(nvrtcProgram prog, size_t* logSizeRet) nogil  # NOQA
++ctypedef nvrtcResult (*F_nvrtcGetProgramLogSize)(nvrtcProgram prog, size_t* logSizeRet) noexcept nogil  # NOQA
+ cdef F_nvrtcGetProgramLogSize nvrtcGetProgramLogSize
+ 
+-ctypedef nvrtcResult (*F_nvrtcGetProgramLog)(nvrtcProgram prog, char* log) nogil  # NOQA
++ctypedef nvrtcResult (*F_nvrtcGetProgramLog)(nvrtcProgram prog, char* log) noexcept nogil  # NOQA
+ cdef F_nvrtcGetProgramLog nvrtcGetProgramLog
+ 
+-ctypedef nvrtcResult (*F_nvrtcAddNameExpression)(nvrtcProgram, const char*) nogil  # NOQA
++ctypedef nvrtcResult (*F_nvrtcAddNameExpression)(nvrtcProgram, const char*) noexcept nogil  # NOQA
+ cdef F_nvrtcAddNameExpression nvrtcAddNameExpression
+ 
+-ctypedef nvrtcResult (*F_nvrtcGetLoweredName)(nvrtcProgram, const char*, const char**) nogil  # NOQA
++ctypedef nvrtcResult (*F_nvrtcGetLoweredName)(nvrtcProgram, const char*, const char**) noexcept nogil  # NOQA
+ cdef F_nvrtcGetLoweredName nvrtcGetLoweredName
+ 
+-ctypedef nvrtcResult (*F_nvrtcGetNumSupportedArchs)(int* numArchs) nogil
++ctypedef nvrtcResult (*F_nvrtcGetNumSupportedArchs)(int* numArchs) noexcept nogil  # NOQA
+ cdef F_nvrtcGetNumSupportedArchs nvrtcGetNumSupportedArchs
+ 
+-ctypedef nvrtcResult (*F_nvrtcGetSupportedArchs)(int* supportedArchs) nogil
++ctypedef nvrtcResult (*F_nvrtcGetSupportedArchs)(int* supportedArchs) noexcept nogil  # NOQA
+ cdef F_nvrtcGetSupportedArchs nvrtcGetSupportedArchs
+ 
+-ctypedef nvrtcResult (*F_nvrtcGetNVVMSize)(nvrtcProgram prog, size_t *nvvmSizeRet) nogil  # NOQA
++ctypedef nvrtcResult (*F_nvrtcGetNVVMSize)(nvrtcProgram prog, size_t *nvvmSizeRet) noexcept nogil  # NOQA
+ cdef F_nvrtcGetNVVMSize nvrtcGetNVVMSize
+ 
+-ctypedef nvrtcResult (*F_nvrtcGetNVVM)(nvrtcProgram prog, char *nvvm) nogil
++ctypedef nvrtcResult (*F_nvrtcGetNVVM)(nvrtcProgram prog, char *nvvm) noexcept nogil  # NOQA
+ cdef F_nvrtcGetNVVM nvrtcGetNVVM
+ 
+ 
+Index: cupy/cuda/cupy_thrust.cu
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/cupy/cuda/cupy_thrust.cu b/cupy/cuda/cupy_thrust.cu
+--- a/cupy/cuda/cupy_thrust.cu	(revision 1e4a78b77d66840d8e2e15e0d73e98573bf5be22)
++++ b/cupy/cuda/cupy_thrust.cu	(date 1739281295064)
+@@ -38,7 +38,7 @@
+ 
+ 
+ extern "C" char *cupy_malloc(void *, size_t);
+-extern "C" void cupy_free(void *, char *);
++extern "C" int cupy_free(void *, char *);
+ 
+ 
+ class cupy_allocator {
+Index: cupy/cuda/thrust.pyx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/cupy/cuda/thrust.pyx b/cupy/cuda/thrust.pyx
+--- a/cupy/cuda/thrust.pyx	(revision 1e4a78b77d66840d8e2e15e0d73e98573bf5be22)
++++ b/cupy/cuda/thrust.pyx	(date 1739281295079)
+@@ -33,11 +33,12 @@
+     return <char *>mem.ptr
+ 
+ 
+-cdef public void cupy_free(void *m, char* ptr) with gil:
++cdef public int cupy_free(void *m, char* ptr) except -1 with gil:
+     if ptr == <char *>0:
+-        return
++        return 0
+     cdef _MemoryManager mm = <_MemoryManager>m
+     del mm.memory[<size_t>ptr]
++    return 0
+ 
+ 
+ ###############################################################################
+@@ -69,7 +70,7 @@
+ 
+ 
+ cpdef sort(dtype, intptr_t data_start, intptr_t keys_start,
+-           const vector.vector[ptrdiff_t]& shape) except +:
++           const vector.vector[ptrdiff_t]& shape):
+     cdef void* _data_start = <void*>data_start
+     cdef size_t* _keys_start = <size_t*>keys_start
+     cdef intptr_t _strm = stream.get_current_stream_ptr()
+@@ -90,7 +91,7 @@
+ 
+ 
+ cpdef lexsort(dtype, intptr_t idx_start, intptr_t keys_start,
+-              size_t k, size_t n) except +:
++              size_t k, size_t n):
+     cdef size_t* idx_ptr = <size_t*>idx_start
+     cdef void* keys_ptr = <void*>keys_start
+     cdef intptr_t _strm = stream.get_current_stream_ptr()
+@@ -112,7 +113,7 @@
+ 
+ cpdef argsort(dtype, intptr_t idx_start, intptr_t data_start,
+               intptr_t keys_start,
+-              const vector.vector[ptrdiff_t]& shape) except +:
++              const vector.vector[ptrdiff_t]& shape):
+     cdef size_t*_idx_start = <size_t*>idx_start
+     cdef void* _data_start = <void*>data_start
+     cdef size_t* _keys_start = <size_t*>keys_start
+Index: cupy_backends/cuda/_softlink.pyx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/cupy_backends/cuda/_softlink.pyx b/cupy_backends/cuda/_softlink.pyx
+--- a/cupy_backends/cuda/_softlink.pyx	(revision 1e4a78b77d66840d8e2e15e0d73e98573bf5be22)
++++ b/cupy_backends/cuda/_softlink.pyx	(date 1739281295143)
+@@ -49,7 +49,7 @@
+         return cython.operator.dereference(<func_ptr*>ptr)
+ 
+ 
+-cdef int _fail_unsupported() nogil except -1:
++cdef int _fail_unsupported() except -1 nogil:
+     with gil:
+         raise AssertionError('''
+ *** The requested function is not supported in the current version of
+@@ -59,7 +59,7 @@
+ ***   https://github.com/cupy/cupy/issues
+ ''')
+ 
+-cdef int _fail_not_found() nogil except -1:
++cdef int _fail_not_found() except -1 nogil:
+     with gil:
+         raise AssertionError('''
+ *** The requested function could not be found in the library.
+Index: install/cupy_builder/cupy_setup_build.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/install/cupy_builder/cupy_setup_build.py b/install/cupy_builder/cupy_setup_build.py
+--- a/install/cupy_builder/cupy_setup_build.py	(revision 1e4a78b77d66840d8e2e15e0d73e98573bf5be22)
++++ b/install/cupy_builder/cupy_setup_build.py	(date 1739281322993)
+@@ -317,6 +317,9 @@
+     # https://groups.google.com/forum/#!topic/theano-users/3ihQYiTRG4E
+     settings['define_macros'].append(('_FORCE_INLINES', '1'))
+ 
++    # Ensure all "cdef public" APIs have C linkage.
++    settings['define_macros'].append(('CYTHON_EXTERN_C', 'extern "C"'))
++
+     if ctx.linetrace:
+         settings['define_macros'].append(('CYTHON_TRACE', '1'))
+         settings['define_macros'].append(('CYTHON_TRACE_NOGIL', '1'))
+Index: install/cupy_builder/_command.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/install/cupy_builder/_command.py b/install/cupy_builder/_command.py
+--- a/install/cupy_builder/_command.py	(revision 1e4a78b77d66840d8e2e15e0d73e98573bf5be22)
++++ b/install/cupy_builder/_command.py	(date 1739281295215)
+@@ -105,6 +105,9 @@
+             'profile': ctx.profile,
+             # Embed signatures for Sphinx documentation.
+             'embedsignature': True,
++            # Allow not implementing reversed method
++            # https://github.com/cupy/cupy/issues/5893#issuecomment-944909015
++            'c_api_binop_methods': True,
+         }
+ 
+         # Compile-time constants to be used in Cython code
+Index: cupy/_core/_kernel.pyx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/cupy/_core/_kernel.pyx b/cupy/_core/_kernel.pyx
+--- a/cupy/_core/_kernel.pyx	(revision 1e4a78b77d66840d8e2e15e0d73e98573bf5be22)
++++ b/cupy/_core/_kernel.pyx	(date 1739281294944)
+@@ -1156,7 +1156,6 @@
+         readonly object _doc
+         public object __doc__
+         readonly object __name__
+-        readonly object __module__
+ 
+     def __init__(
+             self, name, nin, nout, _Ops ops, preamble='', loop_prep='', doc='',
+Index: setup.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/setup.py b/setup.py
+--- a/setup.py	(revision 1e4a78b77d66840d8e2e15e0d73e98573bf5be22)
++++ b/setup.py	(date 1739281323023)
+@@ -19,7 +19,7 @@
+ 
+ # TODO(kmaehashi): migrate to pyproject.toml (see #4727, #4619)
+ setup_requires = [
+-    'Cython>=0.29.22,<3',
++    'Cython>=3',
+     'fastrlock>=0.5',
+ ]
+ install_requires = [
+@@ -29,7 +29,7 @@
+ extras_require = {
+     'all': [
+         'scipy>=1.7,<1.17',  # see #4773
+-        'Cython>=0.29.22,<3',
++        'Cython>=3',
+         'optuna>=2.0',
+     ],
+     'test': [
+Index: cupyx/cusolver.pyx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/cupyx/cusolver.pyx b/cupyx/cusolver.pyx
+--- a/cupyx/cusolver.pyx	(revision 1e4a78b77d66840d8e2e15e0d73e98573bf5be22)
++++ b/cupyx/cusolver.pyx	(date 1739281295170)
+@@ -59,11 +59,11 @@
+ 
+ ctypedef int(*gesvd_ptr)(intptr_t, char, char, int, int, intptr_t,
+                          intptr_t, intptr_t, intptr_t,
+-                         intptr_t, int, intptr_t, int) nogil
++                         intptr_t, int, intptr_t, int) noexcept nogil
+ ctypedef int(*geqrf_ptr)(intptr_t, int, int, intptr_t, int, intptr_t,
+-                         intptr_t, int, intptr_t, int) nogil
++                         intptr_t, int, intptr_t, int) noexcept nogil
+ ctypedef int(*orgqr_ptr)(intptr_t, int, int, int, intptr_t, int, intptr_t,
+-                         intptr_t, int, intptr_t, int, int) nogil
++                         intptr_t, int, intptr_t, int, int) noexcept nogil
+ 
+ 
+ _available_cuda_version = {
+Index: cupy/_core/dlpack.pyx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/cupy/_core/dlpack.pyx b/cupy/_core/dlpack.pyx
+--- a/cupy/_core/dlpack.pyx	(revision 1e4a78b77d66840d8e2e15e0d73e98573bf5be22)
++++ b/cupy/_core/dlpack.pyx	(date 1739281295038)
+@@ -27,7 +27,7 @@
+ cdef uint32_t IMPL_VER_MINOR = 0
+ 
+ 
+-cdef void pycapsule_deleter(object dltensor):
++cdef void pycapsule_deleter(object dltensor) noexcept:
+     cdef DLManagedTensor* dlm_tensor
+     cdef DLManagedTensorVersioned *dlm_tensor_ver
+ 
+@@ -45,7 +45,7 @@
+         pass
+ 
+ 
+-cdef void deleter(DLManagedTensor* tensor) with gil:
++cdef void deleter(DLManagedTensor* tensor) noexcept with gil:
+     # Delete fully initialized DLManagedTensor
+     stdlib.free(tensor.dl_tensor.shape)
+     cpython.Py_DECREF(<_ndarray_base>tensor.manager_ctx)
+@@ -53,7 +53,7 @@
+     stdlib.free(tensor)
+ 
+ 
+-cdef void deleter_ver(DLManagedTensorVersioned* tensor) with gil:
++cdef void deleter_ver(DLManagedTensorVersioned* tensor) noexcept with gil:
+     # Delete fully initialized DLManagedTensorVersioned
+     stdlib.free(tensor.dl_tensor.shape)
+     cpython.Py_DECREF(<_ndarray_base>tensor.manager_ctx)
+@@ -104,7 +104,7 @@
+ cpdef object toDlpack(
+     _ndarray_base array, bint use_versioned=True, bint to_cpu=False,
+     bint ensure_copy=False, stream=None
+-) except +:
++):
+     """Create a dlpack capsule for an array.
+ 
+     Parameters
+@@ -342,7 +342,7 @@
+ 
+ # The name of this function is following the framework integration guide of
+ # TensorComprehensions.
+-cpdef _ndarray_base fromDlpack(object dltensor) except +:
++cpdef _ndarray_base fromDlpack(object dltensor):
+     """Zero-copy conversion from a DLPack tensor to a :class:`~cupy.ndarray`.
+ 
+     DLPack is a open in memory tensor structure proposed in this repository:
+@@ -392,7 +392,7 @@
+     return _dlpack_to_cupy_array(dltensor)
+ 
+ 
+-cdef inline _ndarray_base _dlpack_to_cupy_array(dltensor) except +:
++cdef inline _ndarray_base _dlpack_to_cupy_array(dltensor):
+     cdef DLPackMemory mem = DLPackMemory(dltensor)
+     cdef DLDataType dtype = mem.dl_tensor.dtype
+     cdef int bits = dtype.bits
