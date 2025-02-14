@@ -447,3 +447,22 @@ diff --git a/cupy/_core/dlpack.pyx b/cupy/_core/dlpack.pyx
      cdef DLPackMemory mem = DLPackMemory(dltensor)
      cdef DLDataType dtype = mem.dl_tensor.dtype
      cdef int bits = dtype.bits
+---
+ install/cupy_builder/_command.py | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/install/cupy_builder/_command.py b/install/cupy_builder/_command.py
+index 3f49975f11e..823b4602d3d 100644
+--- a/install/cupy_builder/_command.py
++++ b/install/cupy_builder/_command.py
+@@ -108,6 +108,10 @@ def _cythonize(self, nthreads: int) -> None:
+             # Allow not implementing reversed method
+             # https://github.com/cupy/cupy/issues/5893#issuecomment-944909015
+             'c_api_binop_methods': True,
++            # Keep the behavior same as Cython 0.29.x.
++            # https://github.com/cupy/cupy/pull/8457#issuecomment-2656568499
++            'binding': False,
++            'legacy_implicit_noexcept': True,
+         }
+
+         # Compile-time constants to be used in Cython code
