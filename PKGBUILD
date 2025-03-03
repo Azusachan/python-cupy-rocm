@@ -6,7 +6,7 @@ pkgver=13.4.0
 _cccl_commit=3a388b7b01512d48474b98389a3e776c8d8f817a
 _dlpack_commit=cd0d5e4ff888b388aef4f9b6bd5d9aa5737a020e
 _jitify_commit=1a0ca0e837405506f3b8f7883bacb71c20d86d96
-pkgrel=2
+pkgrel=3
 pkgdesc="NumPy-like API accelerated with ROCm"
 url="https://cupy.dev"
 arch=('x86_64')
@@ -35,7 +35,7 @@ build() {
   export CUPY_INSTALL_USE_HIP=1
   export ROCM_HOME=/opt/rocm
   export CFLAGS="-DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_HIP"
-  export HCC_AMDGPU_TARGET=gfx906
+  export HCC_AMDGPU_TARGET=gfx906,gfx908,gfx90a,gfx940,gfx941,gfx942,gfx1010,gfx1012,gfx1030,gfx1100,gfx1101,gfx1102
   python setup.py build
 }
 
