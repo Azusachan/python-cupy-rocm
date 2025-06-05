@@ -2,7 +2,7 @@
 
 pkgname=python-cupy-rocm
 _pkgname=cupy
-pkgver=13.4.0
+pkgver=13.4.1
 _cccl_commit=3a388b7b01512d48474b98389a3e776c8d8f817a
 _dlpack_commit=cd0d5e4ff888b388aef4f9b6bd5d9aa5737a020e
 _jitify_commit=1a0ca0e837405506f3b8f7883bacb71c20d86d96
@@ -18,11 +18,11 @@ source=("https://github.com/cupy/cupy/archive/v$pkgver.tar.gz"
         "https://github.com/dmlc/dlpack/archive/$_dlpack_commit.tar.gz"
         "https://github.com/NVIDIA/jitify/archive/$_jitify_commit.tar.gz"
         "ROCm6_3.patch")
-md5sums=('212ea8525fa2caf1555ec35af151a1bf'
+md5sums=('e2d5bc3741f04fad276b33772908ae39'
          'c3c1d6a1dc4af521adbcb7dfd3a9c0a8'
          '116c914e84c24ff66bf8f8c1b9fee4f7'
          '0fb2589c81179e752d9bc45be72ed992'
-         'd51a0e974baf44b288bcb2b1e3577481')
+         '7e6f9aa07a2524e83e923a5b89f25c5b')
 
 prepare() {
   cd "$srcdir/$_pkgname-$pkgver"
